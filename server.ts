@@ -26,7 +26,16 @@ const isDev = process.env.NODE_ENV !== 'production' || !hasDist;
 
 // In AI Studio dev container and Cloud Run deployment, the platform reverse proxy
 // listens on port 8080 and forwards traffic to the application on port 3000.
-const PORT = 3000;
+// On local Windows/macOS/Linux machines, PORT can be set via environment variable or defaults to 3000.
+const PORT = parseInt(process.env.PORT || '3000', 10);
+
+// Resolves the correct Python binary cross-platform (python on Windows, python3 on Linux/macOS)
+function getPythonCommand(): string {
+  if (process.env.PYTHON_PATH) {
+    return process.env.PYTHON_PATH;
+  }
+  return process.platform === 'win32' ? 'python' : 'python3';
+}
 
 app.use(express.json());
 
@@ -197,7 +206,7 @@ app.get('/api/network/interfaces', async (_req: Request, res: Response) => {
   ];
 
   try {
-    const py = spawn('python3', [
+    const py = spawn(getPythonCommand(), [
       '-c',
       'import json; from backend.network_utils import detect_network_interfaces; print(json.dumps(detect_network_interfaces()))'
     ], { cwd: __dirname });
@@ -235,7 +244,7 @@ app.get('/api/network/interfaces', async (_req: Request, res: Response) => {
 app.get('/api/network/detect', (_req: Request, res: Response) => {
   const fallbackCidr = '127.0.0.0/30';
   try {
-    const py = spawn('python3', [
+    const py = spawn(getPythonCommand(), [
       '-c',
       'from backend.network_utils import get_default_local_network; print(get_default_local_network())'
     ], { cwd: __dirname });
@@ -347,7 +356,7 @@ app.post('/api/scans', (req: Request, res: Response) => {
   activeScans.set(scanId, scanInfo);
 
   // Spawn Python scanner CLI safely
-  const pythonProc = spawn('python3', [
+  const pythonProc = spawn(getPythonCommand(), [
     'backend/scanner_cli.py',
     '--scan-id', scanId,
     '--cidr', cidr,
@@ -700,8 +709,21 @@ async function startServer() {
     }
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[NetScope] Server listening on http://0.0.0.0:${PORT} (mode: ${isDev ? 'dev' : 'production'})`);
+    console.log(`[NetScope] Access URL: http://localhost:${PORT}`);
+  });
+
+  server.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`\n[NetScope Startup Error] Port ${PORT} is already in use by another running process.`);
+      console.error(`[Quick Solution] Either close the conflicting process, or run NetScope on an alternate port:`);
+      console.error(`  Windows CMD:        set PORT=3001 && npm run dev`);
+      console.error(`  PowerShell / Bash:  $env:PORT=3001; npm run dev  (or PORT=3001 npm run dev)\n`);
+      process.exit(1);
+    } else {
+      console.error('[NetScope Server Error]:', err);
+    }
   });
 }
 
