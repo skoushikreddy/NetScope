@@ -1,0 +1,6 @@
+{
+  "name": "NetScope — Simple Network Scanner",
+  "description": "Professional network scanner and host discovery utility with subnet calculator, real-time ICMP ping probing, reverse DNS resolution, latency analytics, and persistent scan history.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
