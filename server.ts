@@ -10,10 +10,22 @@ import { calculateSubnet, getSubnetHostIps } from './src/utils/subnetCalculator.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+process.on('uncaughtException', (err) => {
+  console.error('[NetScope] Handled uncaught exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[NetScope] Handled rejection at:', promise, 'reason:', reason);
+});
+
 const app = express();
-const isDev = process.env.NODE_ENV === 'development';
-// In AI Studio dev container and Cloud Run live deployment, the platform reverse proxy
-// listens on port 8080 and proxies traffic to the app on port 3000.
+const distDir = path.join(__dirname, 'dist');
+const distHtml = path.join(distDir, 'index.html');
+const hasDist = fs.existsSync(distHtml);
+const isDev = process.env.NODE_ENV !== 'production' || !hasDist;
+
+// In AI Studio dev container and Cloud Run deployment, the platform reverse proxy
+// listens on port 8080 and forwards traffic to the application on port 3000.
 const PORT = 3000;
 
 app.use(express.json());

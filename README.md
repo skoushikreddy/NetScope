@@ -61,30 +61,42 @@ NetScope performs real ICMP Echo Request ping probes using platform-aware operat
 
 ---
 
-## 4. Quick Start & Installation
+## 4. How to Access & Run NetScope
 
-### Prerequisites
+### ⚠️ Note on Cloud Environment vs. Local Machine
+> **If you are viewing this project in Google AI Studio Build:**
+> The backend and frontend run inside a remote cloud container. Typing `http://localhost:3000` into your personal computer's web browser will result in `ERR_CONNECTION_REFUSED (-102)` because the server is hosted remotely in the cloud, not on your personal laptop.
+> 
+> - **In AI Studio:** Click the **App Preview** window inside AI Studio, or use the provided Cloud Run App URL.
+> - **On your local computer:** To use `http://localhost:3000`, follow the local setup steps below to clone and start the server on your personal machine.
+
+---
+
+### Running on Your Local Computer (Workstation)
+
+#### Prerequisites
 - Node.js 20+ installed
 - Python 3.10+ installed
-- OS ping utility installed (standard on Windows, Linux, and macOS)
+- Standard OS ping utility (present by default on Windows, Linux, and macOS)
 
-### Option A: Full-Stack Mode (Recommended)
+#### Option A: Full-Stack Mode (Recommended)
 
-In this mode, Express on port 3000 serves the React frontend, provides the REST API/SSE endpoints, executes the Python scanner CLI worker, and reads/writes to `data/netscope.db`.
+In this mode, Express on port 3000 serves the React frontend, provides the REST API and Server-Sent Events (SSE) stream, runs the Python ICMP scanner core, and saves sessions to SQLite (`data/netscope.db`).
 
 ```bash
-# 1. Install frontend dependencies
+# 1. Install frontend & server dependencies
 npm install
 
-# 2. Run automated unit tests
-npm test # or: npx tsx --test src/utils/subnetCalculator.test.ts
+# 2. Run automated verification tests
+npx tsx --test src/utils/subnetCalculator.test.ts
 python3 -m unittest discover tests
 
-# 3. Start development server on http://localhost:3000
+# 3. Start development server on your local machine
 npm run dev
 ```
 
-Open your browser to `http://localhost:3000`.
+Once running locally, open your web browser to:
+👉 **`http://localhost:3000`**
 
 ---
 
